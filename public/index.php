@@ -168,67 +168,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Library Check-In - SPCBA</title>
+
+    <!-- Optional: modern web font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Main stylesheet (replace with the new one) -->
     <link rel="stylesheet" href="assets/css/style.css">
+
+    <meta name="theme-color" content="#0B6A3A">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>SAN PEDRO COLLEGE OF BUSINESS ADMINISTRATION</h1>
-            <h2>Library Users Statistics</h2>
+    <!-- Skip link for keyboard users -->
+    <a class="skip-link" href="#main">Skip to main content</a>
 
-            <nav>
-                <a href="../staff/login.php" class="button">Staff Login</a>
+    <div class="container">
+        <header class="site-header" role="banner">
+            <div class="header-left">
+                <!-- Update this path if you put the logo in a different folder -->
+                <img src="assets/images/spcbaheader.png" alt="San Pedro College logo" class="logo">
+            </div>
+
+            <div class="header-center">
+                <h1 class="site-title">San Pedro College of Business Administration</h1>
+                <p class="site-subtitle">Library Users Statistics</p>
+            </div>
+
+            <nav class="header-nav" aria-label="Main navigation">
+                <a href="../staff/login.php" class="btn btn--ghost">Staff Login</a>
             </nav>
         </header>
-        
-        <main>
-            <?php if (!empty($message)): ?>
-                <div class="message"><?php echo htmlspecialchars($message); ?></div>
-            <?php endif; ?>
-            
-            <?php if (!$student): ?>
-                <!-- Student Number Input Form -->
-                <form method="POST" class="card">
-                    <h3>Enter Your Student Number</h3>
-                    <div class="form-group">
-                        <label for="student_no">Student Number:</label>
-                       <input type="text" id="student_no" name="student_no" 
-                        required autofocus maxlength="8" minlength="8"
-                        pattern="([0-9]{8}|[0-9]{3}[A-Z][0-9]{4})"
-                        title="Input Valid Student Number!">
 
+        <main id="main" class="main" role="main">
+            <?php if (!empty($message)): ?>
+                <div id="formMessage" class="message" role="status" aria-live="polite">
+                    <?php echo htmlspecialchars($message); ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!$student): ?>
+                <form method="POST" class="card form-card" novalidate>
+                    <h2 class="card-title">Enter Your Student Number</h2>
+                    <div class="form-group">
+                        <label for="student_no">Student Number</label>
+                        <input
+                            type="text"
+                            id="student_no"
+                            name="student_no"
+                            required
+                            autofocus
+                            maxlength="8"
+                            minlength="8"
+                            pattern="([0-9]{8}|[0-9]{3}[A-Z][0-9]{4})"
+                            title="Valid examples: 21100058 or 251S0000"
+                            aria-describedby="studentHint"
+                        >
+                        <div id="studentHint" class="hint">Format: 8 digits (21100058) or 3 digits + 1 uppercase letter + 4 digits (251S0000).</div>
                     </div>
-                    <button type="submit">Check In/Out</button>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn--primary">Check In / Out</button>
+                    </div>
                 </form>
-                
+
             <?php elseif ($active_visit): ?>
-                <!-- Time Out Form -->
-                <form method="POST" class="card">
-                    <h3>Time Out</h3>
-                    <p>Welcome, <?php echo htmlspecialchars($student['full_name']); ?>!</p>
+                <form method="POST" class="card form-card">
+                    <h2 class="card-title">Time Out</h2>
+                    <p class="lead">Welcome, <?php echo htmlspecialchars($student['full_name']); ?>!</p>
                     <p>Course: <?php echo htmlspecialchars($student['year_course']); ?></p>
                     <p>You timed in at <?php echo date('h:i A', strtotime($active_visit['time_in'])); ?> for <?php echo htmlspecialchars($active_visit['purpose']); ?>.</p>
-                    
+
                     <input type="hidden" name="visit_id" value="<?php echo intval($active_visit['id']); ?>">
                     <input type="hidden" name="student_id" value="<?php echo intval($student['id']); ?>">
                     <input type="hidden" name="student_no" value="<?php echo htmlspecialchars($student['student_no']); ?>">
                     <input type="hidden" name="full_name" value="<?php echo htmlspecialchars($student['full_name']); ?>">
                     <input type="hidden" name="year_course" value="<?php echo htmlspecialchars($student['year_course']); ?>">
-                    
-                    <button type="submit" name="time_out">Time Out</button>
-                    <a href="index.php" class="button">Back</a>
+
+                    <div class="form-actions">
+                        <button type="submit" name="time_out" class="btn btn--primary">Time Out</button>
+                        <a href="index.php" class="btn btn--ghost">Back</a>
+                    </div>
                 </form>
-                
+
             <?php else: ?>
-                <!-- Time In Form -->
-                <form method="POST" class="card">
-                    <h3>Time In</h3>
-                    <p>Welcome, <?php echo htmlspecialchars($student['full_name']); ?>!</p>
+                <form method="POST" class="card form-card">
+                    <h2 class="card-title">Time In</h2>
+                    <p class="lead">Welcome, <?php echo htmlspecialchars($student['full_name']); ?>!</p>
                     <p>Course: <?php echo htmlspecialchars($student['year_course']); ?></p>
-                    
+
                     <div class="form-group">
-                        <label for="purpose">Purpose of Visit:</label>
-                        <select id="purpose" name="purpose" required>
+                        <label for="purpose">Purpose of Visit</label>
+                        <select id="purpose" name="purpose" required aria-required="true">
                             <option value="">Select Purpose</option>
                             <option value="Study">Study</option>
                             <option value="Research">Research</option>
@@ -238,63 +267,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                             <option value="Others">Others</option>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label for="notes">Notes (optional):</label>
+                        <label for="notes">Notes (optional)</label>
                         <textarea id="notes" name="notes" rows="2"></textarea>
                     </div>
-                    
+
                     <input type="hidden" name="student_id" value="<?php echo intval($student['id']); ?>">
                     <input type="hidden" name="student_no" value="<?php echo htmlspecialchars($student['student_no']); ?>">
                     <input type="hidden" name="full_name" value="<?php echo htmlspecialchars($student['full_name']); ?>">
                     <input type="hidden" name="year_course" value="<?php echo htmlspecialchars($student['year_course']); ?>">
-                    
-                    <button type="submit" name="time_in">Time In</button>
-                    <a href="index.php" class="button">Back</a>
+
+                    <div class="form-actions">
+                        <button type="submit" name="time_in" class="btn btn--primary">Time In</button>
+                        <a href="index.php" class="btn btn--ghost">Back</a>
+                    </div>
                 </form>
             <?php endif; ?>
-            
+
             <?php if (isset($_POST['student_no']) && !$student && !isset($_POST['register'])): ?>
-                <!-- Registration Form for New Students -->
-                <form method="POST" class="card">
-                    <h3>First-Time Registration</h3>
+                <form method="POST" class="card form-card">
+                    <h2 class="card-title">First-Time Registration</h2>
                     <p>Student number not found. Please register your details.</p>
-                    
+
                     <div class="form-group">
-                        <label for="reg_student_no">Student Number:</label>
+                        <label for="reg_student_no">Student Number</label>
                         <input type="text" id="reg_student_no" name="student_no" value="<?php echo htmlspecialchars($_POST['student_no']); ?>" required readonly>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label for="full_name">Full Name:</label>
-                        <input type="text" id="full_name" name="full_name" required pattern="[a-zA-Z\s\.\-']+">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="year_course">Year & Course / Strand:</label>
-                        <input type="text" id="year_course" name="year_course" placeholder="e.g., Gr. 11 - STEM / 1st Yr. - BSA" required pattern="[a-zA-Z0-9\s\.\-\/]+">
-                    </div>
-                    
-                   <div class="form-group">
-                        <label for="contact_no">Contact Number:</label>
-                        <input type="text" id="contact_no" name="contact_no" 
-                            pattern="^09[0-9]{9}$" 
-                            title="Enter a valid PH mobile number (e.g., 09123456789)"
-                            maxlength="11">
+                        <label for="full_name">Full Name</label>
+                        <input type="text" id="full_name" name="full_name" required pattern="[a-zA-Z\s\.\-']+" title="Letters, spaces, . - '">
                     </div>
 
-                    
-                    <button type="submit" name="register">Register</button>
-                    <a href="index.php" class="button">Cancel</a>
+                    <div class="form-group">
+                        <label for="year_course">Year &amp; Course / Strand</label>
+                        <input type="text" id="year_course" name="year_course" placeholder="e.g., Gr. 11 - STEM / 1st Yr. - BSA" required pattern="[a-zA-Z0-9\s\.\-\/]+">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact_no">Contact Number</label>
+                        <input type="text" id="contact_no" name="contact_no"
+                               pattern="^09[0-9]{9}$"
+                               title="Enter a valid PH mobile number (e.g., 09123456789)"
+                               maxlength="11">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" name="register" class="btn btn--primary">Register</button>
+                        <a href="index.php" class="btn btn--ghost">Cancel</a>
+                    </div>
                 </form>
             <?php endif; ?>
         </main>
-        
-        <footer>
+
+        <footer class="site-footer" role="contentinfo">
             <p>&copy; <?php echo date('Y'); ?> San Pedro College of Business Administration</p>
         </footer>
     </div>
-    
-    <script src="assets/js/script.js"></script>
+
+    <script src="assets/js/script.js" defer></script>
 </body>
 </html>
+
