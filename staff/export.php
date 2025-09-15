@@ -124,7 +124,6 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             <h2>Export Visit Data</h2>
             <nav>
                 <a href="dashboard.php">Dashboard</a>
-                <a href="visits.php">Visits</a>
                 <a href="export.php" class="active">Export</a>
                 <a href="logout.php">Logout (<?php echo htmlspecialchars($_SESSION['staff_fullname']); ?>)</a>
             </nav>

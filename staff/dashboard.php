@@ -32,7 +32,11 @@ $query = "SELECT AVG(TIMESTAMPDIFF(MINUTE, time_in, time_out)) as avg_duration
 $stmt = $db->prepare($query);
 $stmt->bindParam(':today', $today);
 $stmt->execute();
-$avg_duration = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_duration'], 1);
+$avg_result = $stmt->fetch(PDO::FETCH_ASSOC);
+$avg_duration = isset($avg_result['avg_duration']) && $avg_result['avg_duration'] !== null
+    ? round($avg_result['avg_duration'], 1)
+    : 0;
+
 
 // Current active visits
 $query = "SELECT COUNT(*) as active FROM visits WHERE time_out IS NULL";
@@ -87,7 +91,7 @@ $recent_visits = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 
                 <div class="stat-card">
-                    <h3>Active Now</h3>
+                    <h3>🟢 Active Now</h3>
                     <div class="stat-number"><?php echo $active_visits; ?></div>
                 </div>
             </div>
@@ -114,7 +118,7 @@ $recent_visits = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <td><?php echo htmlspecialchars($visit['student_no']); ?></td>
                             <td><?php echo htmlspecialchars($visit['year_course']); ?></td>
                             <td><?php echo date('h:i A', strtotime($visit['time_in'])); ?></td>
-                            <td><?php echo $visit['time_out'] ? date('h:i A', strtotime($visit['time_out'])) : 'Active'; ?></td>
+                            <td><?php echo $visit['time_out'] ? date('h:i A', strtotime($visit['time_out'])) : '🟢Active'; ?></td>
                             <td><?php echo htmlspecialchars($visit['purpose']); ?></td>
                         </tr>
                         <?php endforeach; ?>
