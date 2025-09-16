@@ -417,9 +417,19 @@ table th { position: sticky; top:0; background: #FAFEF9; font-weight:700; }
     margin-top: 5px;
 }
 
+.filters-form .form-actions {
+    display: flex;
+    gap: 12px;      /* horizontal space between buttons */
+    margin-top: -60px;
+    margin-left: 21px;
+    margin-bottom: 29px;  /* add vertical space below buttons */
+    align-items: center;
+}
+
+
 /* Make the buttons consistent */
 .form-actions .btn {
-    min-width: 130px;
+    min-width: 180px;
     justify-content: center;
 }
 

@@ -153,6 +153,8 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                                 <option value="xlsx" <?php echo $format == 'xlsx' ? 'selected' : ''; ?>>Excel (XLSX)</option>
                             </select>
                         </div>
+
+                        
                     </div>
 
                     <div class="form-actions">
