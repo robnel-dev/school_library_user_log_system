@@ -39,18 +39,20 @@ function validate_contact($contact) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_no']) && !isset($_POST['register'])) {
     $student_no = clean_input($_POST['student_no']);
 
-    if (!validate_student_no($student_no)) {
+    // Validate student number format
+    if (!validate_student_no($student_no)) { 
         $message = "Invalid student number format.";
+        $message_type = "error"; // red toast
     } else {
         // Check if student exists
         $query = "SELECT id, student_no, full_name, year_course FROM students WHERE student_no = :student_no";
         $stmt = $db->prepare($query);
         $stmt->bindParam(':student_no', $student_no);
         $stmt->execute();
-        
+
         if ($stmt->rowCount() > 0) {
             $student = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             // Check for active visit (time_in without time_out)
             $query = "SELECT id, time_in, purpose FROM visits 
                       WHERE student_id = :student_id AND time_out IS NULL 
@@ -58,13 +60,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_no']) && !iss
             $stmt = $db->prepare($query);
             $stmt->bindParam(':student_id', $student['id']);
             $stmt->execute();
-            
+
             if ($stmt->rowCount() > 0) {
+                // Student already timed in
                 $active_visit = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                // // Informational toast
+                // $message = "You are currently timed in since " . date('h:i A', strtotime($active_visit['time_in'])) . " for " . htmlspecialchars($active_visit['purpose']) . ".";
+                // $message_type = "info"; // blue/info toast
+            } else {
+                // No active visit yet
+                $active_visit = null;
+                // Do NOT set a "Time In recorded" message here — only show form for Time In
             }
+
+        } else {
+            // Student not found
+            $message = "Student number not found. Please register your details.";
+            $message_type = "warning"; // yellow toast
         }
     }
 }
+
 
 // =====================
 // Handle time in action
@@ -110,17 +127,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['time_out'])) {
     $stmt->bindParam(':visit_id', $visit_id, PDO::PARAM_INT);
     
     if ($stmt->execute()) {
+        // Optional: set a message for toast (won't show after redirect unless using session)
         $message = "Time Out recorded. Thank you for visiting!";
-        $student = [
-            'id' => intval($_POST['student_id'] ?? 0),
-            'student_no' => clean_input($_POST['student_no']),
-            'full_name' => clean_input($_POST['full_name']),
-            'year_course' => clean_input($_POST['year_course'])
-        ];
+        $message_type = "success";
     } else {
         $message = "Error recording Time Out. Please try again.";
+        $message_type = "error";
     }
 }
+
 
 // =====================
 // Handle registration
@@ -149,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         $stmt->bindParam(':contact_no', $contact_no);
         
         if ($stmt->execute()) {
-            $message = "Registration successful! You can now check in.";
+            $message = "Registration successful! You can now time in.";
             $student = [
                 'id' => $db->lastInsertId(), 
                 'student_no' => $student_no, 
@@ -178,6 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <meta name="theme-color" content="#0B6A3A">
 </head>
 <body>
+
     <!-- Skip link for keyboard users -->
     <a class="skip-link" href="#main">Skip to main content</a>
 
@@ -190,26 +206,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
             <div class="header-center">
                 <h1 class="site-title">San Pedro College of Business Administration</h1>
-                <p class="site-subtitle">Library Users Statistics</p>
+                <p class="site-subtitle">The Premier School Business School of the South</p>
             </div>
 
             <nav class="header-nav" aria-label="Main navigation">
-                <a href="../staff/login.php" class="btn btn--ghost">Staff Login</a>
+                <a href="../staff/login.php" class="btn btn--primary">Staff Login</a>
             </nav>
         </header>
 
         <main id="main" class="main" role="main">
-            <?php if (!empty($message)): ?>
-                <div id="formMessage" class="message" role="status" aria-live="polite">
-                    <?php echo htmlspecialchars($message); ?>
-                </div>
-            <?php endif; ?>
 
             <?php if (!$student): ?>
                 <form method="POST" class="card form-card" novalidate>
-                    <h2 class="card-title">Enter Your Student Number</h2>
+                    <i><h2 class="card-title">Enter Your Student Number Below:</h2></i>
                     <div class="form-group">
-                        <label for="student_no">Student Number</label>
                         <input
                             type="text"
                             id="student_no"
@@ -221,8 +231,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                             pattern="([0-9]{8}|[0-9]{3}[A-Z][0-9]{4})"
                             title="Valid examples: 21100058 or 251S0000"
                             aria-describedby="studentHint"
-                        >
-                        <div id="studentHint" class="hint">Format: 8 digits (21100058) or 3 digits + 1 uppercase letter + 4 digits (251S0000).</div>
+                            >
+                        <div id="studentHint" class="hint">Format: 8 characters (e.g., 21100058 or 251S0000)</div>
                     </div>
 
                     <div class="form-actions">
@@ -255,23 +265,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     <p class="lead">Welcome, <?php echo htmlspecialchars($student['full_name']); ?>!</p>
                     <p>Course: <?php echo htmlspecialchars($student['year_course']); ?></p>
 
-                    <div class="form-group">
-                        <label for="purpose">Purpose of Visit</label>
-                        <select id="purpose" name="purpose" required aria-required="true">
-                            <option value="">Select Purpose</option>
-                            <option value="Study">Study</option>
-                            <option value="Research">Research</option>
-                            <option value="Borrowing">Borrowing</option>
-                            <option value="Returning">Returning</option>
-                            <option value="Group Work">Group Work</option>
-                            <option value="Others">Others</option>
-                        </select>
-                    </div>
+                  <div class="form-group">
+                    <label for="purpose">Purpose of Visit</label>
+                    <select id="purpose" name="purpose" required aria-required="true">
+                        <option value="">Select Purpose</option>
+                        <option value="Study">Study</option>
+                        <option value="Research">Research</option>
+                        <option value="Borrowing">Borrowing</option>
+                        <option value="Returning">Returning</option>
+                        <option value="Group Work">Group Work</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
 
-                    <div class="form-group">
-                        <label for="notes">Notes (optional)</label>
-                        <textarea id="notes" name="notes" rows="2"></textarea>
-                    </div>
+                <div class="form-group">
+                    <label for="notes">Notes (optional)</label>
+                    <textarea id="notes" name="notes" rows="2"></textarea>
+                </div>
+
 
                     <input type="hidden" name="student_id" value="<?php echo intval($student['id']); ?>">
                     <input type="hidden" name="student_no" value="<?php echo htmlspecialchars($student['student_no']); ?>">
@@ -288,7 +299,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             <?php if (isset($_POST['student_no']) && !$student && !isset($_POST['register'])): ?>
                 <form method="POST" class="card form-card">
                     <h2 class="card-title">First-Time Registration</h2>
-                    <p>Student number not found. Please register your details.</p>
 
                     <div class="form-group">
                         <label for="reg_student_no">Student Number</label>
@@ -321,12 +331,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             <?php endif; ?>
         </main>
 
-        <footer class="site-footer" role="contentinfo">
-            <p>&copy; <?php echo date('Y'); ?> San Pedro College of Business Administration</p>
-        </footer>
+     <?php include 'footer.php'; ?>
+
     </div>
 
     <script src="assets/js/script.js" defer></script>
+
+    <!-- Toast container -->
+<div id="toast-container" class="toast-container"></div>
+
+<script>
+function showToast(message, type = 'success', redirectUrl = null, delay = 2000) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.classList.add('toast', `toast-${type}`);
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    // Remove toast after 3s
+    setTimeout(() => {
+        toast.remove();
+        // Redirect if URL provided
+        if (redirectUrl) {
+            window.location.href = redirectUrl;
+        }
+    }, delay);
+}
+
+// Auto-show toast if PHP message exists
+<?php if (!empty($message)): ?>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Only redirect after time out
+        <?php if (isset($_POST['time_out'])): ?>
+            showToast("<?php echo addslashes($message); ?>", "<?php echo $message_type; ?>", "http://localhost/library-app/public/index.php", 2000);
+        <?php else: ?>
+            showToast("<?php echo addslashes($message); ?>", "<?php echo $message_type; ?>");
+        <?php endif; ?>
+    });
+<?php endif; ?>
+</script>
+
+
 </body>
 </html>
 

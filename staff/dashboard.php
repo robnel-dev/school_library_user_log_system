@@ -37,7 +37,6 @@ $avg_duration = isset($avg_result['avg_duration']) && $avg_result['avg_duration'
     ? round($avg_result['avg_duration'], 1)
     : 0;
 
-
 // Current active visits
 $query = "SELECT COUNT(*) as active FROM visits WHERE time_out IS NULL";
 $stmt = $db->prepare($query);
@@ -63,17 +62,22 @@ $recent_visits = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>SAN PEDRO COLLEGE OF BUSINESS ADMINISTRATION</h1>
-            <h2>Library Staff Dashboard</h2>
-            <nav>
-                <a href="dashboard.php" class="active">Dashboard</a>
-                <a href="export.php">Export</a>
-                <a href="logout.php">Logout (<?php echo htmlspecialchars($_SESSION['staff_fullname']); ?>)</a>
-            </nav>
-        </header>
+<header class="site-header">
+    <img src="../public/assets/images/spcbaheader.png" alt="SPCBA Logo" class="logo">
+    <div class="header-center">
+        <h1 class="site-title">SAN PEDRO COLLEGE OF BUSINESS ADMINISTRATION</h1>
+        <p class="site-subtitle">Library Staff Dashboard</p>
+    </div>
+    <nav class="header-nav">
+        <a href="dashboard.php" class="btn btn--primary">Dashboard</a>
+        <a href="export.php" class="btn btn--ghost">Export</a>
+        <a href="logout.php" class="btn btn--danger">Logout</a>
+    </nav>
+</header>
+
         
-        <main>
+       <main id="main" class="main" role="main">
+            <!-- Stats -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Today's Visits</h3>
@@ -96,40 +100,41 @@ $recent_visits = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
             
+            <!-- Recent Visits -->
             <div class="card">
                 <h3>Recent Visits</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Name</th>
-                            <th>Student No.</th>
-                            <th>Year/Course</th>
-                            <th>Time In</th>
-                            <th>Time Out</th>
-                            <th>Purpose</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($recent_visits as $visit): ?>
-                        <tr>
-                            <td><?php echo date('M j, Y', strtotime($visit['date'])); ?></td>
-                            <td><?php echo htmlspecialchars($visit['full_name']); ?></td>
-                            <td><?php echo htmlspecialchars($visit['student_no']); ?></td>
-                            <td><?php echo htmlspecialchars($visit['year_course']); ?></td>
-                            <td><?php echo date('h:i A', strtotime($visit['time_in'])); ?></td>
-                            <td><?php echo $visit['time_out'] ? date('h:i A', strtotime($visit['time_out'])) : '🟢Active'; ?></td>
-                            <td><?php echo htmlspecialchars($visit['purpose']); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Student No.</th>
+                                <th>Year/Course</th>
+                                <th>Time In</th>
+                                <th>Time Out</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recent_visits as $visit): ?>
+                            <tr>
+                                <td><?php echo date('M j, Y', strtotime($visit['date'])); ?></td>
+                                <td><?php echo htmlspecialchars($visit['full_name']); ?></td>
+                                <td><?php echo htmlspecialchars($visit['student_no']); ?></td>
+                                <td><?php echo htmlspecialchars($visit['year_course']); ?></td>
+                                <td><?php echo date('h:i A', strtotime($visit['time_in'])); ?></td>
+                                <td><?php echo $visit['time_out'] ? date('h:i A', strtotime($visit['time_out'])) : '🟢 Active'; ?></td>
+                                <td><?php echo htmlspecialchars($visit['purpose']); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
         
-        <footer>
-            <p>&copy; <?php echo date('Y'); ?> San Pedro College of Business Administration</p>
-        </footer>
+        <?php include '../public/footer.php'; ?>
     </div>
 </body>
 </html>
